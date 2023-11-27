@@ -191,13 +191,13 @@ lapply(sites, my_plot)
 # Section III - make a map of sites -----------------------------------------------------
 
 
-## Load in site coordinates
+## Load in site coordinates; this will only work with a key (not provided)
 
 site.coords <- read.csv('../Reality-Wren/Data/2023_RealityWrenAudioMothDeployment.csv')
 
 site.coords$Site_ID <- as.factor(site.coords$Site_ID)
 
-register_google(key = "AIzaSyClmxXKQfZD0-6nL6yiYKpx_9Waxr2kmn8")
+
 
 ## make ggmap; get map center, set map type, plot points on map, save map as an image
 map.center <- summarise(site.coords, long = mean(longitude), lat = mean(latitude))
