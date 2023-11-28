@@ -10,8 +10,10 @@ library(ggmap)
 # Section I - get BirdNET output ----------------------------------------
 
 
-## This is not the right way to do this and should be changed to a relative path.
-setwd('Z:/RealityWren/BikePath/Site04')
+## This is not the right way to do this and should be changed to the CANR Server path.
+setwd('Z:/RealityWren/BikePath/Site14')
+
+# setwd('//10.2.28.245/Shriver/ARU_Data/RealityWren/BikePath/Site14')
 
 ## create list of files from BirdNET output folder for the Site identified in the directory above
 list_of_files <- list.files(path = "./output",
@@ -23,7 +25,7 @@ list_of_files <- list.files(path = "./output",
 df <- readr::read_csv(list_of_files, id = "file_name")
 
 ## add side ID
-df$site <- 04
+df$site <- 14
 
 ## subtract year, month, day, and time from 'file_name'
 df$year <- substr(df$file_name, 10, 13)
@@ -41,7 +43,7 @@ df$time <- as.numeric(df$time)
 df$count <- 1
 
 ## save csv file so this can be the new start file for visualization in Section 2 below
-write.csv(df, 'Z:/RealityWren/BikePath/results/Site_04_results.csv', row.names=FALSE)
+write.csv(df, 'Z:/RealityWren/BikePath/results/Site_14_results.csv', row.names=FALSE)
 
 
 ## If necessary, add rows on days no wrens were detected 
@@ -62,7 +64,7 @@ total_wren %>%
     x = "day",
     y = "total wren detections",
     title = paste(
-      "Reality Wren Phenology Mar-Oct Site 04"
+      "Reality Wren Phenology Mar-Oct Site 14"
     )) +
   facet_grid(rows=vars(month))
 
