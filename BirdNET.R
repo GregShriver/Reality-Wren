@@ -1,4 +1,6 @@
 ## Playing with BirdNET output for the Carolina Wren Ecology Study
+## trying to convince Liz that this is a good idea!  
+
 
 ## load packages
 library(tidyverse)
