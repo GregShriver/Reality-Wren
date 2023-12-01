@@ -12,28 +12,26 @@ library(ggmap)
 # Section I - get BirdNET output ----------------------------------------
 
 
-## This is not the right way to do this and should be changed to the CANR Server path.
-setwd('Z:/RealityWren/BikePath/Site14')
+## create list of files from BirdNET output folder for the Site you are processing.  You need to update the site number in 4 places; list_of_files, adding 'site' to the dataframe, write.csv, and ggplot code
 
-# setwd('//10.2.28.245/Shriver/ARU_Data/RealityWren/BikePath/Site14')
-
-## create list of files from BirdNET output folder for the Site identified in the directory above
-list_of_files <- list.files(path = "./output",
+list_of_files <- list.files(path = "//10.2.28.245/Shriver/ARU_Data/RealityWren/BikePath/Site20/output",
                             recursive = TRUE,
                             pattern = "*.csv",
                             full.names = TRUE)
+
+
 
 ## read contents of files into data frame (df)...this takes a few minutes (15 - 20 min)
 df <- readr::read_csv(list_of_files, id = "file_name")
 
 ## add side ID
-df$site <- 14
+df$site <- 20
 
 ## subtract year, month, day, and time from 'file_name'
-df$year <- substr(df$file_name, 10, 13)
-df$month <- substr(df$file_name, 14, 15)
-df$day <- substr(df$file_name, 16, 17)
-df$time <- substr(df$file_name, 19, 22)
+df$year <- substr(df$file_name, 67, 70)
+df$month <- substr(df$file_name, 71, 72)
+df$day <- substr(df$file_name, 73, 74)
+df$time <- substr(df$file_name, 76, 79)
 
 ## convert columns to appropriate type
 df$year <- as.factor(df$year)
@@ -45,7 +43,7 @@ df$time <- as.numeric(df$time)
 df$count <- 1
 
 ## save csv file so this can be the new start file for visualization in Section 2 below
-write.csv(df, 'Z:/RealityWren/BikePath/results/Site_14_results.csv', row.names=FALSE)
+write.csv(df, 'Z:/RealityWren/BikePath/results/Site_20_results.csv', row.names=FALSE)
 
 
 ## If necessary, add rows on days no wrens were detected 
@@ -66,7 +64,7 @@ total_wren %>%
     x = "day",
     y = "total wren detections",
     title = paste(
-      "Reality Wren Phenology Mar-Oct Site 14"
+      "Reality Wren Phenology Mar-Oct Site 20"
     )) +
   facet_grid(rows=vars(month))
 
