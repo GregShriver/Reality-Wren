@@ -87,24 +87,55 @@ gt(site.coords.tab)
 </br>
 </br>
 
-![](../Reality-Wren/Output/1.png)
-</br>
-</br>
 
-![](../Reality-Wren/Output/2.png)
+```{r, echo = TRUE}
 
-</br>
-</br>
-
-![](../Reality-Wren/Output/3.png)
+## ADD lapply code for making am pm figures here...
 
 
-</br>
-</br>
+song.dat <- read.csv('../Reality-Wren/Output/wren_detections.csv')
 
-![](../Reality-Wren/Output/11.png)
+## Create a column for morning (am) and evening (pm)
 
-</br>
-</br>
+song.dat <- song.dat %>%
+  mutate(time_code = case_when(time < 1200 ~ 'am',
+                               time > 1200 ~ 'pm'))
 
-![](../Reality-Wren/Output/12.png)
+
+## Create df grouped by time_code (am & pm)
+
+total_wren_day <- song.dat %>% 
+  group_by(site, month, day, time_code) %>%
+  summarize(total_wren = sum(count))
+
+
+total_wren_day$site <- as.factor(total_wren_day$site)
+
+sites <- levels(total_wren_day$site)
+
+## create a plot function that will use lapply to iterate through sites making a figure for each site (like above but this time with stacked bars showing songs in am and pm)
+
+
+## Get file names to change
+my_plot_hours <- function(sites){
+  total_wren_day %>%
+    filter(site == sites) %>%
+    ggplot(aes(fill=time_code, y=total_wren, x=day)) + 
+    geom_bar(position="stack", stat="identity")+
+    theme_classic() +
+    labs(
+      x = "day",
+      y = "total wren detections",
+      title = paste("Reality Wren Phenology Mar-Oct Site", sites)) +
+    facet_grid(rows=vars(month))
+  }
+
+lapply(sites, my_plot_hours)
+
+## run the vector of sites through the function using lapply
+#htmltools::tagList(lapply(sites, my_plot_hours))
+
+
+```
+
+
