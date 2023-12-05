@@ -196,10 +196,32 @@ site <- total_wren_yday$site
 ggplot(total_wren_yday, aes(x = yday, y = site, fill = total_wren)) +
   geom_tile() +
     theme_classic() +
-   scale_fill_viridis() + 
+   scale_fill_viridis_c(option = "magma") + 
    scale_y_continuous(breaks = site)
 
 
+
+ggplot(total_wren_yday, aes(x = yday, y = site, fill = total_wren)) +
+  geom_tile() +
+  theme_classic() +
+  scale_fill_gradient2(
+    low = "grey",
+    mid = "white",
+    high = "brown", 
+    midpoint = 10) + 
+  scale_y_continuous(breaks = site)
+  
+    
+    
+
+
+x <- select(total_wren_yday, yday, site, total_wren)
+x$site <- as.numeric(x$site)
+x <- as.matrix(x)
+
+heatmap(x, Colv = NA, Rowv = NA, scale = "column")
+
+densityHeatmap(scale(x))
 
 ## Example code to break heat map figs by month??
 
