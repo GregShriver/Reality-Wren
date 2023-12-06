@@ -7,7 +7,7 @@ library(tidyverse)
 library(stringr)
 library(ggmap)
 library(lubridate)
-
+library(magrittr)
 
 # Section I - get BirdNET output ----------------------------------------
 
@@ -109,6 +109,10 @@ song.dat <- rbind(Site01, Site02, Site03, Site04, Site05, Site06, Site07, Site08
 write.csv(song.dat, '../Reality-Wren/Output/wren_detections.csv', row.names=FALSE)
 
 
+###############################################
+## NEED TO ADD A READ.CSV TO CREATE song.dat
+
+song.dat <- read.csv('../Reality-Wren/Output/wren_detections.csv')
 
 ## Create a column for morning (am) and evening (pm)
 
@@ -137,6 +141,10 @@ song.dat$date <- ymd(song.dat$date)
 
 song.dat$yday <- yday(song.dat$date)
 
+
+## Create a week field from date
+
+song.dat$week <- week(song.dat$date)
 
 
 ## Create df grouped by time_code (am & pm)
@@ -178,7 +186,7 @@ lapply(sites, my_plot_hours)
 
 
 
-# Heatmap  ----------------------------------------------------------------
+# Section III - Heatmap  ----------------------------------------------------------------
 
 ## Create df grouped by year day
 
@@ -187,32 +195,43 @@ total_wren_yday <- song.dat %>%
   summarize(total_wren = sum(count))
 
 
-total_wren_day$site <- as.factor(total_wren_yday$site)
+total_wren_yday$site <- as.numeric(total_wren_yday$site)
 
 site <- total_wren_yday$site
+
 
 ## create the heat map
 
 ggplot(total_wren_yday, aes(x = yday, y = site, fill = total_wren)) +
   geom_tile() +
     theme_classic() +
-   scale_fill_viridis_c(option = "magma") + 
+   scale_fill_viridis(direction = -1) + 
    scale_y_continuous(breaks = site)
 
 
 
-ggplot(total_wren_yday, aes(x = yday, y = site, fill = total_wren)) +
+total_wren_yday %<>% mutate(zscore = (total_wren - mean(total_wren))/sd(total_wren))
+
+#option = "magma"
+
+
+ggplot(total_wren_yday, aes(x = yday, y = site, fill = zscore)) +
   geom_tile() +
   theme_classic() +
   scale_fill_gradient2(
     low = "grey",
     mid = "white",
     high = "brown", 
-    midpoint = 10) + 
+    midpoint = 0) + 
   scale_y_continuous(breaks = site)
   
     
-    
+
+ggplot(total_wren_yday, aes(x = yday, y = site, fill = zscore)) +
+  geom_tile() +
+  theme_classic() +
+  scale_fill_viridis_c(direction = -1) + 
+  scale_y_continuous(breaks = site)
 
 
 x <- select(total_wren_yday, yday, site, total_wren)
@@ -223,93 +242,53 @@ heatmap(x, Colv = NA, Rowv = NA, scale = "column")
 
 densityHeatmap(scale(x))
 
-## Example code to break heat map figs by month??
 
 
-
-library(ggplot2)
-library(dplyr) # easier data wrangling 
-library(viridis) # colour blind friendly palette, works in B&W also
-library(Interpol.T) #  will generate a large dataset on initial load
-library(lubridate) # for easy date manipulation
-library(ggExtra) # because remembering ggplot theme options is beyond me
-library(tidyr) 
+# Section IV - Boxplots by week -------------------------------------------
 
 
-data <- data(Trentino_hourly_T,package = "Interpol.T")
+## Create df grouped by week
 
-names(h_d_t)[1:5]<- c("stationid","date","hour","temp","flag")
-df <- tbl_df(h_d_t) %>%
-  filter(stationid =="T0001")
-
-df <- df %>% mutate(year = year(date),
-                    month = month(date, label=TRUE),
-                    day = day(date))
-
-df$date<-ymd(df$date) # not necessary for plot but 
-#useful if you want to do further work with the data
-
-#cleanup
-rm(list=c("h_d_t","mo_bias","Tn","Tx",
-          "Th_int_list","calibration_l",
-          "calibration_shape","Tm_list"))
+total_wren_week <- song.dat %>% 
+  group_by(site, day) %>%
+  summarize(total_wren = sum(count), across())
 
 
-#create plotting df
-df <-df %>% select(stationid,day,hour,month,year,temp)%>%
-  fill(temp) #optional - see note below
+total_wren_week$site <- as.factor(total_wren_week$site)
+song.dat$site <- as.factor(song.dat$site)
+song.dat$week <- as.factor(song.dat$week)
 
-# Re: use of fill
-# This code is for demonstrating a visualisation technique
-# There are 5 missing hourly values in the dataframe.
-
-# see the original plot here (from my ggplot demo earlier this year) to see the white spaces where the missing values occcur:
-# https://github.com/johnmackintosh/ggplotdemo/blob/master/temp8.png 
-
-# I used 'fill' from  tidyr to take the prior value for each missing value and replace the NA
-# This is a quick fix for the blog post only - _do not_ do this with your real world data
-
-# Should really use either use replace_NA or complete(with fill)in tidyr 
-# OR 
-# Look into more specialist way of replacing these missing values -e.g. imputation.
+ggplot(total_wren_week, aes(x = reorder(site, -total_wren), y = total_wren)) + 
+  geom_bar(stat="identity") + 
+  theme(axis.text.x = element_text(angle = 45, size = 8)) +
+  theme_classic()
 
 
+ggplot(total_wren_week, aes(x = week, y = total_wren, fill = site)) + 
+  geom_boxplot() +
+  facet_wrap(~ site, scales = "free")+
+  theme_classic() +
+  theme(axis.text.x = element_text(size=5, angle=45)) +
+  theme(legend.position = "none")
 
-statno <-unique(df$stationid)
 
-
-
-######## Plotting starts here#####################
-p <-ggplot(df,aes(day,hour,fill=temp))+
-  geom_tile(color= "white",size=0.1) + 
-  scale_fill_viridis(name="Hrly Temps C",option ="C")
-p <-p + facet_grid(year~month)
-p <-p + scale_y_continuous(trans = "reverse", breaks = unique(df$hour))
-p <-p + scale_x_continuous(breaks =c(1,10,20,31))
-p <-p + theme_minimal(base_size = 8)
-p <-p + labs(title= paste("Hourly Temps - Station",statno), x="Day", y="Hour Commencing")
-p <-p + theme(legend.position = "bottom")+
-  theme(plot.title=element_text(size = 14))+
-  theme(axis.text.y=element_text(size=6)) +
-  theme(strip.background = element_rect(colour="white"))+
-  theme(plot.title=element_text(hjust=0))+
-  theme(axis.ticks=element_blank())+
-  theme(axis.text=element_text(size=7))+
-  theme(legend.title=element_text(size=8))+
-  theme(legend.text=element_text(size=6))+
-  removeGrid()#ggExtra
-
-# you will want to expand your plot screen before this bit!
-p #awesomeness
+ggplot(total_wren_week, aes(x = month, y = total_wren, fill = site)) + 
+  geom_boxplot() +
+  facet_wrap(~ site, scales = "free")+
+  theme_classic() +
+  theme(axis.text.x = element_text(size=5, angle=45)) +
+  theme(legend.position = "none")
 
 
 
 
 
+total_wren_site <- song.dat %>% 
+  group_by(site) %>%
+  summarize(total_wren = sum(count))
 
 
-
-# Section III - make a map of sites -----------------------------------------------------
+# Section Appendix - make a map of sites -----------------------------------------------------
 
 
 ## Load in site coordinates; this will only work with a key (not provided)
